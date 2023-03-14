@@ -9,9 +9,9 @@
 """
 
 import json
-import os
 import logging
-import time
+
+from common import list_all_files, md5sum, argv
 
 output_filename = 'md5sum.json'
 
@@ -19,44 +19,19 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y/%d/%m %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, datefmt=DATE_FORMAT)
 
-def md5sum(path):
-    import hashlib
-    d5 = hashlib.md5()
-    with open(path, 'rb') as f:
-        while True:
-            data = f.read(2024)
-            if not data:
-                break
-            d5.update(data)  # update添加时会进行计算
-    return d5.hexdigest()
-
-def list_all_files(rootdir):
-    import os
-    _files = []
-    list = os.listdir(rootdir) #列出文件夹下所有的目录与文件
-    for i in range(0,len(list)):
-           path = os.path.join(rootdir,list[i])
-           if os.path.isdir(path):
-              _files.extend(list_all_files(path))
-           if os.path.isfile(path):
-               if path.endswith('.pdf'):
-                    _files.append(path)
-    return _files
-
-rootdir = r'D:\my-Linux\note-repository\note\PDF\backup'
-json_list = []
-
 def main():
-    all_files = list_all_files(rootdir)
+    root_dir = argv(logging)
+    logging.info("起始目录为:" + root_dir)
+    all_files = list_all_files(root_dir)
     logging.info('文件列表读取完成，开始计算 md5 值')
-    for i in all_files:
+    json_list = []
+    for file in all_files:
         time_start = time.time()  # 记录开始时间
-        md5_value = md5sum(i)
+        md5_value = md5sum(file)
         time_end = time.time()  # 记录结束时间
-        logging.info('md5 计算完成，耗时 {:6.3f} 秒, 文件 {} '.format(float(time_end - time_start), i))
+        logging.info('md5 计算完成，耗时 {:6.3f} 秒, 文件 {} '.format(float(time_end - time_start), file))
         obj = {
-            # 文件路径 相对路径
-            "filepath": i.replace(rootdir, '').replace('\\', '/')[1:],
+            "filepath": file, # 文件路径 相对路径
             "md5sum": md5_value
         }
         json_list.append(obj)
@@ -67,6 +42,7 @@ def main():
     logging.info('一共读取了 {} 个文件'.format(len(all_files)))
 
 if __name__ == '__main__':
+    import time
     time_start = time.time()  # 记录开始时间
     logging.info("程序开始运行")
     main()
