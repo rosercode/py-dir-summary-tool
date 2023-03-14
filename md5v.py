@@ -21,12 +21,19 @@ DATE_FORMAT = "%Y/%d/%m %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, datefmt=DATE_FORMAT)
 
 def main():
+    import platform
+    system = platform.system()
+
     root_dir = argv(logging)
     f = open(output_filename, 'rb+')
     for obj in json.loads(f.read().decode('utf-8')):
         filepath = root_dir + os.sep + obj['filepath']
+        md5_value = ""
         if os.path.exists(filepath):
-            md5_value = md5sum(filepath)
+            if system == "Darwin" or system == "Linux":
+                md5_value = md5sum(filepath)
+            elif system == "Windows":
+                md5_value = md5sum(filepath.replace("/","\\"))
         else:
             logging.error('文件不存在 {} '.format(filepath))
             continue

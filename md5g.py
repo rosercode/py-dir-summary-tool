@@ -31,7 +31,7 @@ def main():
         time_end = time.time()  # 记录结束时间
         logging.info('md5 计算完成，耗时 {:6.3f} 秒, 文件 {} '.format(float(time_end - time_start), file))
         obj = {
-            "filepath": file, # 文件路径 相对路径
+            "filepath": file.replace("\\","/"), # 文件路径 相对路径
             "md5sum": md5_value
         }
         json_list.append(obj)

@@ -1,14 +1,12 @@
 import os
 
-
 def list_all_files(root_dir):
     from os import walk
     all_files = []
     for (dir_path, dir_names, file_names) in walk(root_dir):
         a_list = []
         for file_name in file_names:
-            a_list.append(dir_path + os.sep + file_name)
-        print(dir_path, dir_names, file_names)
+            a_list.append(dir_path + file_name)
         all_files.extend(a_list)
     return all_files
 
@@ -24,10 +22,10 @@ def md5sum(path):
     return d5.hexdigest()
 
 def argv(logging):
-    import sys, os
+    import sys
     if len(sys.argv)!=2:
         logging.info("起始路径不存在，默认使用路径")
-        root_dir = ".\\"
+        root_dir = "."
     else:
         root_dir = sys.argv[1]
     if not os.path.exists(root_dir) or not os.path.isdir(root_dir):
