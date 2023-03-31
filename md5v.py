@@ -15,10 +15,10 @@
 import json
 import logging
 
-import md5g
-from common import argv
+import md5g  # 导入自定义的 md5g 模块
+from common import argv  # 导入自定义的 common 模块
 
-output_filename = 'md5sum.json'
+OUTPUT_FILENAME  = 'md5sum.json'
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y/%d/%m %H:%M:%S %p"
@@ -26,39 +26,37 @@ DATE_FORMAT = "%Y/%d/%m %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, datefmt=DATE_FORMAT)
 
 def main():
-    import platform
+    import platform, os
     system = platform.system()
 
     root_dir = argv(logging)
-    f = open(output_filename, 'rb+')
+    f = open(OUTPUT_FILENAME , 'rb+')
     dir_files1 = md5g.dir_md5_json(root_dir)
     dir_files2 = []
+
+    # 读取之前生成的 md5 校验码文件内容，并转为 json 格式
     for ele in json.loads(f.read().decode('utf-8')):
         new_ele = {
             "filepath": ele["filepath"], # 文件路径 相对路径
             "md5sum": ele["md5sum"]
         }
-        if system == "Darwin" or system == "Linux":
-            pass
-        elif system == "Windows":
-            new_ele["filepath"].replace("/","\\")
+        new_ele["filepath"].replace("/", os.path.sep)
         dir_files2.append(new_ele)
+    logging.info("="*30)
     logging.info("[3] 开始对比，生成报告")
-    dir_files_bigger = []
-    dir_files_smaller = []
-    if len(dir_files2) > len(dir_files1):
-        dir_files_bigger = dir_files2.copy()
-        dir_files_smaller = dir_files1.copy()
-    else:
-        dir_files_bigger = dir_files1.copy()
-        dir_files_smaller = dir_files2.copy()
 
-    for ele in dir_files_smaller:
-        if ele in dir_files_bigger and ele in dir_files_smaller:
+    dir_files_copy1 = dir_files1.copy()
+    dir_files_copy2 = dir_files2.copy()
+    
+    normal_files = 0  # 正常文件数量
+    for ele in dir_files_copy2:
+        if ele in dir_files_copy1 and ele in dir_files_copy2:
             dir_files1.remove(ele)
             dir_files2.remove(ele)
             logging.info('    校验完成，文件正常, md5： {:30}, 文件路径：{} '.format(ele['md5sum'], ele["filepath"]))
+            normal_files += 1
 
+    modified_files = 0  # 被篡改的文件数量
     dir_files3 = dir_files1.copy()
     dir_files4 = dir_files2.copy()
     for ele1 in dir_files3:
@@ -66,15 +64,26 @@ def main():
             if ele1["filepath"] == ele2["filepath"] and ele1["md5sum"] != ele2["md5sum"]:
                 dir_files1.remove(ele1)
                 dir_files2.remove(ele2)
-                logging.error('    校验完成，文件被篡改 {} <-> {}, {}'.format(ele1["md5sum"], ele1["md5sum"], ele1["filepath"]))
+                modified_files += 1
+                logging.error(' '*4 + '校验完成，文件被篡改 {} <-> {}, {}'.format(ele1["md5sum"], ele1["md5sum"], ele1["filepath"]))
                 break
+    new_files = len(dir_files1)  # 新创建的文件数量
+    deleted_files = len(dir_files2)  # 被删除的文件数量
     for ele in dir_files1:
-        logging.error("    新的地方有新的文件，{}".format(ele["filepath"]))
+        logging.error(' '*4 + "新的地方有新的文件，{}".format(ele["filepath"]))
     for ele in dir_files2:
-        logging.error("    文件在新的地方不存在，{}".format(ele["filepath"]))
+        logging.error(' '*4 + "文件在新的地方不存在，{}".format(ele["filepath"]))
+
+    # 生成汇总信息
+    logging.info("="*30)
+    if len(dir_files1) == 0 and len(dir_files2) == 0:
+        logging.info("校验结果：两个目录的文件完全一致，未发现异常文件")
+    else:
+        logging.error("校验未通过！一共 {} 个文件，其中，{} 个文件完全相同，{} 个新文件被新创建，{} 个文件被删除，{} 个文件被篡改".format(normal_files + new_files + deleted_files + modified_files, normal_files, new_files, deleted_files, modified_files))
+
 
 if __name__ == '__main__':
-    f = open(output_filename, 'rb+')
+    f = open(OUTPUT_FILENAME , 'rb+')
     import time
     time_start = time.time()  # 记录开始时间
     logging.info("程序开始运行")

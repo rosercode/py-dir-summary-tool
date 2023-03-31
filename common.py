@@ -1,6 +1,7 @@
 import os
 
 def list_all_files(root_dir):
+    """获取目录下所有文件的路径"""
     file_paths = []
     for root, directories, files in os.walk(root_dir):
         for filename in files:
@@ -9,6 +10,7 @@ def list_all_files(root_dir):
     return file_paths
 
 def md5sum(path):
+    """计算文件的MD5值"""
     import hashlib
     d5 = hashlib.md5()
     with open(path, 'rb') as f:
@@ -20,6 +22,7 @@ def md5sum(path):
     return d5.hexdigest()
 
 def argv(logging):
+    """获取起始路径"""
     import sys, os
     if len(sys.argv)!=2:
         logging.info("起始路径不存在，默认使用路径")

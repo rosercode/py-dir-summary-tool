@@ -20,6 +20,7 @@ DATE_FORMAT = "%Y/%d/%m %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, datefmt=DATE_FORMAT)
 
 def dir_md5_json(root_dir):
+    """计算目录下所有文件的MD5值，并以列表形式返回"""
     import time
     logging.info("[1] 开始获取文件列表")
     all_files = list_all_files(root_dir)
